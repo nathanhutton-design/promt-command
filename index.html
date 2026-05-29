@@ -1,0 +1,145 @@
+import React, { useState } from "react";
+
+export default function PromptBuilderAuditor() {
+  const tips = {
+    task: "Be specific about what you want the AI to accomplish. Use clear action verbs and measurable outcomes.",
+    context: "Provide background, constraints, audience, and any important details the AI needs to know.",
+    exemplar: "Include examples of ideal outputs whenever possible to improve consistency and quality.",
+    persona: "Define the role or expertise level the AI should adopt (e.g., Senior Developer, Recruiter, Teacher).",
+    format: "Specify the exact output structure such as bullet points, JSON, markdown, tables, or summaries.",
+    tone: "Clarify the communication style such as professional, persuasive, technical, conversational, or concise."
+  };
+
+  const [builder, setBuilder] = useState({
+    task: "",
+    context: "",
+    exemplar: "",
+    persona: "",
+    format: "",
+    tone: ""
+  });
+
+  const [draftPrompt, setDraftPrompt] = useState("");
+
+  const generatedPrompt = `# AI Prompt\n\n## Task\n${builder.task || "[Add task]"}\n\n## Context\n${builder.context || "[Add context]"}\n\n## Exemplar\n${builder.exemplar || "[Add exemplar]"}\n\n## Persona\n${builder.persona || "[Add persona]"}\n\n## Format\n${builder.format || "[Add format requirements]"}\n\n## Tone\n${builder.tone || "[Add tone]"}\n\n---\n\nUsing the information above, generate the requested output while following all constraints, formatting requirements, and tone instructions carefully.`;
+
+  const analyzePrompt = () => {
+    const checks = {
+      Task: /(task|create|build|write|generate|analyze|explain)/i.test(draftPrompt),
+      Context: /(context|background|for|audience|situation|company|project)/i.test(draftPrompt),
+      Exemplar: /(example|sample|like this|for instance)/i.test(draftPrompt),
+      Persona: /(act as|you are|role|expert|specialist)/i.test(draftPrompt),
+      Format: /(format|table|json|markdown|bullet|list|structure)/i.test(draftPrompt),
+      Tone: /(tone|professional|friendly|formal|casual|persuasive|technical)/i.test(draftPrompt)
+    };
+
+    const score = Object.values(checks).filter(Boolean).length;
+
+    return { checks, score };
+  };
+
+  const results = analyzePrompt();
+
+  const suggestions = {
+    Task: "Define the exact deliverable and expected outcome more clearly.",
+    Context: "Add more background information and constraints to reduce ambiguity.",
+    Exemplar: "Provide a sample output or reference example to guide the AI.",
+    Persona: "Assign the AI a role or expertise level for more focused responses.",
+    Format: "Specify the desired structure, layout, or formatting requirements.",
+    Tone: "Clarify the communication style and voice you want the AI to use."
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div className="bg-white rounded-3xl shadow-xl p-6">
+          <h1 className="text-3xl font-bold mb-2">AI Prompt Builder</h1>
+          <p className="text-gray-600 mb-6">
+            Build structured, optimized prompts using proven prompt-engineering frameworks.
+          </p>
+
+          {Object.keys(builder).map((key) => (
+            <div key={key} className="mb-5">
+              <label className="block text-sm font-semibold capitalize mb-2">
+                {key}
+              </label>
+              <textarea
+                value={builder[key]}
+                onChange={(e) =>
+                  setBuilder({ ...builder, [key]: e.target.value })
+                }
+                placeholder={`Enter ${key}...`}
+                className="w-full border rounded-2xl p-3 min-h-[90px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <div className="mt-2 text-sm text-blue-700 bg-blue-50 rounded-xl p-3">
+                <strong>Pro Tip:</strong> {tips[key]}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl shadow-xl p-6">
+            <h2 className="text-2xl font-bold mb-4">Generated Prompt</h2>
+            <pre className="bg-slate-900 text-green-300 rounded-2xl p-4 overflow-auto whitespace-pre-wrap text-sm">
+              {generatedPrompt}
+            </pre>
+            <button
+              onClick={() => navigator.clipboard.writeText(generatedPrompt)}
+              className="mt-4 px-5 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition"
+            >
+              Copy Prompt
+            </button>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl p-6">
+            <h2 className="text-2xl font-bold mb-4">Prompt Auditor Dashboard</h2>
+
+            <textarea
+              value={draftPrompt}
+              onChange={(e) => setDraftPrompt(e.target.value)}
+              placeholder="Paste your existing prompt here..."
+              className="w-full border rounded-2xl p-4 min-h-[180px] focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">Prompt Score</h3>
+                <div className="text-2xl font-bold">
+                  {results.score}/6
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {Object.entries(results.checks).map(([key, passed]) => (
+                  <div
+                    key={key}
+                    className={`p-4 rounded-2xl border ${
+                      passed
+                        ? "bg-green-50 border-green-200"
+                        : "bg-red-50 border-red-200"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">{key}</span>
+                      <span>
+                        {passed ? "✅ Present" : "❌ Missing"}
+                      </span>
+                    </div>
+
+                    {!passed && (
+                      <p className="text-sm mt-2 text-gray-700">
+                        {suggestions[key]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
